@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="AutoMapper" Version="13.0.1" />
+		<PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
+		<PackageReference Include="MediatR" Version="12.4.1" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\WebAppStarter.Domain\WebAppStarter.Domain.csproj" />
+	  <ProjectReference Include="..\WebAppStarter.Shared\WebAppStarter.Shared.csproj" />
+	</ItemGroup>
+</Project>

@@ -1,1 +1,1 @@
-Boilerplate for Blazor
+# WebAppStarter
