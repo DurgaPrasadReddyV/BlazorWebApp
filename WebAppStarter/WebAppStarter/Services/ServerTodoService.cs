@@ -1,8 +1,16 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components;
-using WebAppStarter.Shared.TodoItems;
-using WebAppStarter.Shared.TodoItems.Queries;
+using WebAppStarter.Shared.Authentication;
+using MediatR;
+using WebAppStarter.UseCases.TodoItems.Commands;
+using WebAppStarter.Shared.UseCases.TodoItems.Commands;
+using WebAppStarter.Domain.Entities;
+using WebAppStarter.Shared.UseCases.TodoItems;
+using WebAppStarter.Shared.UseCases.TodoItems.Queries;
+using OneOf;
+using WebAppStarter.Shared.Common;
+using OneOf.Types;
 
 namespace WebAppStarter.Services
 {
@@ -11,39 +19,77 @@ namespace WebAppStarter.Services
         private readonly IAuthorizationService _authorizationService;
         private readonly AuthenticationStateProvider _authenticationStateProvider;
         private readonly NavigationManager _navigationManager;
+        private readonly IScopedMediator _mediator;
 
         public ServerTodoService(IAuthorizationService authorizationService,
              AuthenticationStateProvider authenticationStateProvider,
-             NavigationManager navigationManager)
+             NavigationManager navigationManager,
+             IScopedMediator mediator)
         {
             _authorizationService = authorizationService;
             _authenticationStateProvider = authenticationStateProvider;
             _navigationManager = navigationManager;
+            _mediator = mediator;
         }
 
-        public Task AddAsync(TodoItemDto todoItem)
+        public async Task<OneOf<int, Shared.Common.HttpValidationProblemDetails, ProblemDetails>> AddAsync(CreateTodoItemCommand createTodoItemCommand)
         {
-            throw new NotImplementedException();
+            var authenticationState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+            if (!((await _authorizationService.AuthorizeAsync(authenticationState.User, AuthorizationPolicies.CanCreateTodoItem())).Succeeded))
+            {
+                _navigationManager.NavigateTo("AccessDenied");
+                return 0;
+            }
+
+            return await _mediator.Send(createTodoItemCommand);
         }
 
-        public Task DeleteAsync(TodoItemDto todoItem)
+        public async Task<OneOf<None, Shared.Common.HttpValidationProblemDetails, ProblemDetails>> DeleteAsync(DeleteTodoItemCommand deleteTodoItemCommand)
         {
-            throw new NotImplementedException();
+            var authenticationState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+            if (!((await _authorizationService.AuthorizeAsync(authenticationState.User, AuthorizationPolicies.CanDeleteTodoItem())).Succeeded))
+            {
+                _navigationManager.NavigateTo("AccessDenied");
+            }
+
+            await _mediator.Send(deleteTodoItemCommand);
+            return new None();
         }
 
-        public IEnumerable<TodoItemDto> GetAllAsync()
+        public async Task<OneOf<IEnumerable<TodoItemBriefDto>, Shared.Common.HttpValidationProblemDetails, ProblemDetails>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            var authenticationState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+            if (!((await _authorizationService.AuthorizeAsync(authenticationState.User, AuthorizationPolicies.CanViewTodoItem())).Succeeded))
+            {
+                _navigationManager.NavigateTo("AccessDenied");
+                return new List<TodoItemBriefDto>();
+            }
+
+           return await _mediator.Send(new GetTodoItemsByPaginationQuery());
         }
 
-        public TodoItemDto GetAsync(long id)
+        public async Task<OneOf<TodoItemDto, Shared.Common.HttpValidationProblemDetails, ProblemDetails>> GetAsync(int id)
         {
-            throw new NotImplementedException();
+            var authenticationState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+            if (!((await _authorizationService.AuthorizeAsync(authenticationState.User, AuthorizationPolicies.CanViewTodoItem())).Succeeded))
+            {
+                _navigationManager.NavigateTo("AccessDenied");
+                return new TodoItemDto();
+            }
+
+            return await _mediator.Send(new GetTodoItemByIdQuery() { Id = id});
         }
 
-        public Task UpdateAsync(TodoItemDto todoItem)
+        public async Task<OneOf<None, Shared.Common.HttpValidationProblemDetails, ProblemDetails>> UpdateAsync(UpdateTodoItemCommand updateTodoItemCommand)
         {
-            throw new NotImplementedException();
+            var authenticationState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+            if (!((await _authorizationService.AuthorizeAsync(authenticationState.User, AuthorizationPolicies.CanUpdateTodoItem())).Succeeded))
+            {
+                _navigationManager.NavigateTo("AccessDenied");
+            }
+
+            await _mediator.Send(updateTodoItemCommand);
+            return new None();
         }
     }
 }

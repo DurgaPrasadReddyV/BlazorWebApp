@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using WebAppStarter.Shared.TodoItems.Commands;
+using WebAppStarter.Shared.UseCases.TodoItems.Commands;
 
 namespace WebAppStarter.UseCases.TodoItems.Commands;
 

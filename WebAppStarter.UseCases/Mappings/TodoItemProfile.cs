@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WebAppStarter.Domain.Entities;
-using WebAppStarter.Shared.TodoItems.Queries;
+using WebAppStarter.Shared.UseCases.TodoItems.Queries;
 
 namespace WebAppStarter.UseCases.Mappings
 {

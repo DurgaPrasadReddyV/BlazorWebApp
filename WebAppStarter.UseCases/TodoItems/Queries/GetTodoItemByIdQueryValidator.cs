@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using WebAppStarter.Shared.TodoItems.Queries;
+using WebAppStarter.Shared.UseCases.TodoItems.Queries;
 
 namespace WebAppStarter.UseCases.TodoItems.Queries;
 

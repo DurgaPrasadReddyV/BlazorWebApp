@@ -1,5 +1,5 @@
 ﻿using MediatR;
 
-namespace WebAppStarter.Shared.TodoItems.Commands;
+namespace WebAppStarter.Shared.UseCases.TodoItems.Commands;
 
 public record DeleteTodoItemCommand(int Id) : IRequest;

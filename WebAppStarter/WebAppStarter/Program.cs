@@ -4,13 +4,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using System.IdentityModel.Tokens.Jwt;
 using WebAppStarter.Authentication;
-using WebAppStarter.Shared.Pages;
+using WebAppStarter.Shared.UI.Pages;
 using WebAppStarter.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using WebAppStarter.Client.Authentication;
 using WebAppStarter.Services;
-using WebAppStarter.Shared.TodoItems;
 using WebAppStarter.Shared.Authentication;
+using WebAppStarter.Shared.UseCases.TodoItems;
 
 const string entraIdScheme = "EntraIDOpenIDConnect";
 
@@ -22,10 +22,12 @@ builder.Services.AddRazorComponents()
     .AddInteractiveWebAssemblyComponents();
 builder.Services.AddUseCasesServices();
 builder.Services.AddSharedServices();
+builder.Services.AddInfrastructureServices();
 
 builder.Services.AddScoped<AuthenticationStateProvider, PersistingRevalidatingAuthenticationStateProvider>();
 builder.Services.AddScoped<ITodoService, ServerTodoService>();
-
+builder.Services.AddScoped<IScopedMediator, ScopedMediator>();
+builder.Services.AddDistributedMemoryCache();
 builder.Services.AddOpenIdConnectAccessTokenManagement()
     .AddBlazorServerAccessTokenManagement<CustomServerSideTokenStore>();
 builder.Services.AddTransient<CustomTokenStorageOidcEvents>();

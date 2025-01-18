@@ -1,5 +1,4 @@
-﻿
-namespace WebAppStarter.Shared.TodoItems.Queries;
+﻿namespace WebAppStarter.Shared.UseCases.TodoItems.Queries;
 
 public class TodoItemBriefDto
 {

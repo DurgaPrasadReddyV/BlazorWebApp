@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WebAppStarter.Shared.TodoItems.Queries
+namespace WebAppStarter.Shared.UseCases.TodoItems.Queries
 {
     public class TodoItemDto
     {

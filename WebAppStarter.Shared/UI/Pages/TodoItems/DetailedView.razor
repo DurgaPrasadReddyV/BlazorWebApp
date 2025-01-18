@@ -1,0 +1,96 @@
+﻿@page "/todo-items/{Id}"
+@using WebAppStarter.Shared.UI.Components
+@using WebAppStarter.Shared.UseCases.TodoItems
+@using WebAppStarter.Shared.UseCases.TodoItems.Commands
+
+@inject ITodoService TodoService
+@inject ISnackbar Snackbar
+
+<PageTitle>@Title</PageTitle>
+
+<Breadcrumbs OnSaveButtonClick="Save" Saving="@_saving" BreadcrumbItems="_breadcrumbItems"></Breadcrumbs>
+<MudPaper Class="pa-5">
+    @if (model is not null)
+    {
+        <MudForm @ref="editForm" @bind-IsValid="@success" @bind-Errors="@errors">
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="model.Title" For="@(() => model.Title)"
+                                  Label="Title" Placeholder="Title"
+                                  Required="true" RequiredError="Title is required">
+                    </MudTextField>
+                </MudItem>
+                <MudItem xs="12" md="12" Class="d-flex justify-end">
+                    <MudButton Disabled="@_saving" Color="Color.Primary" OnClick="Save">Save</MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    }
+</MudPaper>
+
+@code {
+    public string? Title;
+    [Parameter]
+    public int? Id { get; set; }
+    private bool _saving;
+    bool success;
+    string[] errors = { };
+    private UpdateTodoItemCommand? model;
+    private MudForm editForm = default!;
+    private List<BreadcrumbItem> _breadcrumbItems = new List<BreadcrumbItem>
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Todo Items", href: "/todo-items")
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await TodoService.GetAsync(Id ?? 0);
+        result.Switch(
+            dto =>
+            {
+                model = new()
+                    {
+                        Id = dto.Id ?? 0,
+                        Title = dto.Title
+                    };
+                _breadcrumbItems.Add(new BreadcrumbItem(model.Id.ToString(), href: $"/todo-items/{Id}"));
+            },
+            invalid =>
+            {
+                Snackbar.Add(invalid.Detail ?? "Bad Request", Severity.Error);
+            },
+            error =>
+            {
+                Snackbar.Add(error.Detail ?? "Failed to load Todo Item.", Severity.Error);
+            }
+        );
+    }
+
+    private async Task Save()
+    {
+        editForm?.Validate();
+        if (success == true)
+        {
+            _saving = true;
+            var result = await TodoService.UpdateAsync(model ?? new UpdateTodoItemCommand());
+            _saving = result.Match(
+                ok =>
+                {
+                    Snackbar.Add("Todo Item saved successfully!", Severity.Success);
+                    return false;
+                },
+                invalid =>
+                {
+                    Snackbar.Add(invalid.Detail ?? "Failed validation", Severity.Error);
+                    return false;
+                },
+                error =>
+                {
+                    Snackbar.Add(error.Detail ?? "Failed to save.", Severity.Error);
+                    return false;
+                }
+            );
+        }
+    }
+}

@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using WebAppStarter.Domain.Entities;
-using WebAppStarter.Shared.TodoItems.Commands;
+using WebAppStarter.Shared.UseCases.TodoItems.Commands;
 
 namespace WebAppStarter.UseCases.TodoItems.Commands;
 

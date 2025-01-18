@@ -1,0 +1,61 @@
+﻿@using WebAppStarter.Shared.UseCases.TodoItems
+@using WebAppStarter.Shared.UseCases.TodoItems.Commands
+@inject ITodoService TodoService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="editForm" @bind-IsValid="@success" @bind-Errors="@errors">
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="model.Title" For="@(() => model.Title)"
+                                  Label="Title" Placeholder="Title"
+                                  Required="true" RequiredError="Title is required">
+                    </MudTextField>
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton OnClick="Submit" Disabled="@_saving">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    bool success;
+    string[] errors = { };
+    [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = default!;
+    private CreateTodoItemCommand model = new CreateTodoItemCommand();
+    private MudForm editForm = default!;
+    private bool _saving;
+    private void Cancel() => MudDialog.Cancel();
+    private async Task Submit()
+    {
+        editForm?.Validate();
+        if (success)
+        {
+            _saving = true;
+
+            var result = await TodoService.AddAsync(model);
+            result.Switch(
+                ok =>
+                {
+                    Snackbar.Add("Todo created successfully!", Severity.Success);
+                    MudDialog.Close(DialogResult.Ok(true));
+                    _saving = false;
+                },
+                invalid =>
+                {
+                    Snackbar.Add(invalid.Detail ?? "Failed validation", Severity.Error);
+                    _saving = false;
+                },
+                error =>
+                {
+                    Snackbar.Add(error.Detail ?? "Failed to create product.", Severity.Error);
+                    _saving = false;
+                }
+            );
+        }
+    }
+}

@@ -1,31 +1,35 @@
-﻿using WebAppStarter.Shared.TodoItems;
-using WebAppStarter.Shared.TodoItems.Queries;
+﻿using OneOf;
+using OneOf.Types;
+using WebAppStarter.Shared.Common;
+using WebAppStarter.Shared.UseCases.TodoItems;
+using WebAppStarter.Shared.UseCases.TodoItems.Commands;
+using WebAppStarter.Shared.UseCases.TodoItems.Queries;
 
 namespace WebAppStarter.Client.Services
 {
     public class ClientTodoService : ITodoService
     {
-        public Task AddAsync(TodoItemDto todoItem)
+        public Task<OneOf<int, HttpValidationProblemDetails, ProblemDetails>> AddAsync(CreateTodoItemCommand createTodoItemCommand)
         {
             throw new NotImplementedException();
         }
 
-        public Task DeleteAsync(TodoItemDto todoItem)
+        public Task<OneOf<None, HttpValidationProblemDetails, ProblemDetails>> DeleteAsync(DeleteTodoItemCommand deleteTodoItemCommand)
         {
             throw new NotImplementedException();
         }
 
-        public IEnumerable<TodoItemDto> GetAllAsync()
+        public Task<OneOf<IEnumerable<TodoItemBriefDto>, HttpValidationProblemDetails, ProblemDetails>> GetAllAsync()
         {
             throw new NotImplementedException();
         }
 
-        public TodoItemDto GetAsync(long id)
+        public Task<OneOf<TodoItemDto, HttpValidationProblemDetails, ProblemDetails>> GetAsync(int id)
         {
             throw new NotImplementedException();
         }
 
-        public Task UpdateAsync(TodoItemDto todoItem)
+        public Task<OneOf<None, HttpValidationProblemDetails, ProblemDetails>> UpdateAsync(UpdateTodoItemCommand updateTodoItemCommand)
         {
             throw new NotImplementedException();
         }
