@@ -1,8 +1,10 @@
-﻿@using WebAppStarter.Shared.UI.Navigation
+﻿
+@using WebAppStarter.Shared.UI.Navigation
 
 <MudPaper Elevation="1" Square="true">
     <MudToolBar Class="gap-2" Style="height:50px">
         <MudButton StartIcon="@Icons.Material.Filled.Home" Href="/" Variant="Variant.Text">Home</MudButton>
+        <MudButton StartIcon="@Icons.Material.Filled.Home" Href="/todo-items" Variant="Variant.Text">Todo Items</MudButton>
         @foreach (var item in Menus)
         {
             @if (item.SpecialMenu)
@@ -12,7 +14,7 @@
                          StartIcon="@item.StartIcon"
                          Variant="Variant.Text" Class="mx-1 px-3"
                          ListClass="d-flex px-4 pb-2 appbar-special-menu"
-                         LockScroll="true" Label="item.Label"
+                         LockScroll="true" Label="@item.Label"
                          EndIcon="@item.EndIcon"
                          AnchorOrigin="Origin.BottomCenter"
                          TransformOrigin="Origin.TopCenter">
@@ -21,7 +23,7 @@
                     {
                         <MudList T="string">
                             <MudListSubheader Class="pt-4 pb-2">
-                                sub.Label
+                                @sub.Label
                             </MudListSubheader>
                             @if (sub.SubItems.All(x => x.Status == PageStatus.ComingSoon))
                             {
@@ -33,27 +35,27 @@
                                 {
                                     <MudListItem>
                                         <MudBadge Class="d-flex mr-20" Origin="Origin.CenterRight" Content="@_badgeTextSoon" Color="Color.Info" Overlap="true" BadgeClass="ml-5">
-                                            <MudText>nav.Label</MudText>
+                                            <MudText>@nav.Label</MudText>
                                         </MudBadge>
-                                        <MudText Typo="Typo.body2">nav.Description</MudText>
+                                        <MudText Typo="Typo.body2">@nav.Description</MudText>
                                     </MudListItem>
                                 }
                                 else if (nav.Status == PageStatus.New)
                                 {
                                     <MudListItem Href="@nav.Href">
                                         <MudBadge Class="d-flex mr-20" Origin="Origin.CenterRight" Content="@_badgeTextNew" Color="Color.Success" Overlap="true" BadgeClass="ml-5">
-                                            <MudText>nav.Label</MudText>
+                                            <MudText>@nav.Label</MudText>
                                         </MudBadge>
-                                        <MudText Typo="Typo.body2">nav.Description</MudText>
+                                        <MudText Typo="Typo.body2">@nav.Description</MudText>
                                     </MudListItem>
                                 }
                                 else
                                 {
                                     <MudListItem Href="@nav.Href" Disabled="@(string.IsNullOrEmpty(nav.Href))">
                                         <div class="d-flex">
-                                        <MudText Typo="Typo.body1" Color="@(string.IsNullOrEmpty(nav.Href)?Color.Default:Color.Primary)">nav.Label</MudText>
+                                        <MudText Typo="Typo.body1" Color="@(string.IsNullOrEmpty(nav.Href)?Color.Default:Color.Primary)">@nav.Label</MudText>
                                         </div>
-                                        <MudText Typo="Typo.body2">nav.Description</MudText>
+                                        <MudText Typo="Typo.body2">@nav.Description</MudText>
                                     </MudListItem>
                                 }
 
@@ -64,10 +66,10 @@
             }
             else
             {
-                <MudMenu AnchorOrigin="Origin.BottomLeft" Label=item.Label StartIcon="@item.StartIcon" EndIcon="@item.EndIcon">
+                <MudMenu AnchorOrigin="Origin.BottomLeft" Label="@item.Label" StartIcon="@item.StartIcon" EndIcon="@item.EndIcon">
                     @foreach (var sub in item.SubItems)
                     {
-                        <MudMenuItem>sub.Label</MudMenuItem>
+                        <MudMenuItem>@sub.Label</MudMenuItem>
                     }
                 </MudMenu>
             }

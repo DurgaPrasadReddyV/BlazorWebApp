@@ -46,8 +46,6 @@ builder.Services.AddAuthentication(options =>
     oidcOptions.Scope.Add("offline_access");
     oidcOptions.CallbackPath = new PathString("/signin-oidc");
     oidcOptions.SignedOutCallbackPath = new PathString("/signout-callback-oidc");
-    oidcOptions.ClientId = "01f719a5-6704-402d-ab51-7e52e5d3178c";
-    oidcOptions.ClientSecret = "Jdf8Q~ypFFh4xEm92SoC_LP5is1OYHWHy.KGEaer";
     oidcOptions.MapInboundClaims = false;
     oidcOptions.TokenValidationParameters.NameClaimType = JwtRegisteredClaimNames.Name;
     oidcOptions.TokenValidationParameters.RoleClaimType = "role";
