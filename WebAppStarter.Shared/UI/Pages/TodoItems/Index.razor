@@ -1,5 +1,211 @@
-﻿<h3>Index</h3>
+﻿@page "/todo-items"
+@using Microsoft.AspNetCore.Components.Forms
+@using WebAppStarter.Shared.UI.Components
+@using WebAppStarter.Shared.UI.Pages.TodoItems.Components
+@using WebAppStarter.Shared.UseCases.TodoItems
+@using WebAppStarter.Shared.UseCases.TodoItems.Commands
+@using WebAppStarter.Shared.UseCases.TodoItems.Queries
+
+@inject ITodoService TodoService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+@inject WebAppStarter.Shared.UI.Services.DialogService DialogService
+
+<PageTitle>@Title</PageTitle>
+
+<MudDataGrid T="TodoItemBriefDto" Dense="true" Hover="true"
+@ref="_table"
+ServerData="@(ServerReload)"
+MultiSelection="true"
+SelectOnRowClick="false"
+RowClick="@(r=>DetailedView(r.Item))"
+RowStyleFunc="_rowStyleFunc"
+@bind-RowsPerPage="_defaultPageSize"
+@bind-SelectedItems="_selectedItems"
+@bind-SelectedItem="_currentDto">
+    <ToolBarContent>
+        <MudStack Row Spacing="0" Class="flex-grow-1" Justify="Justify.SpaceBetween">
+            <MudStack Row AlignItems="AlignItems.Start">
+                <MudIcon Icon="@Icons.Material.Filled.QrCodeScanner" Size="Size.Large" />
+                <MudStack Spacing="0">
+                    <MudText Typo="Typo.subtitle2">Title</MudText>
+                    <MudText Typo="Typo.body2">View all available todo items in our inventory.</MudText>
+                </MudStack>
+            </MudStack>
+            <MudStack Spacing="0" AlignItems="AlignItems.End">
+                <MudStack Row Spacing="1">
+                    <MudButton Size="Size.Small" OnClick="()=>_table.ReloadServerData()" Disabled="@_loading">
+                        <MudIcon Icon="@Icons.Material.Filled.Refresh" />
+                        <MudText>Refresh</MudText>
+                    </MudButton>
+                    <MudButton Size="Size.Small" OnClick="New">
+                        <MudIcon Icon="@Icons.Material.Filled.Add" />
+                        <MudText>New</MudText>
+                    </MudButton>
+                    <MudButton Size="Size.Small" Disabled="@(!_selectedItems.Any())" OnClick="Delete">
+                        <MudIcon Icon="@Icons.Material.Outlined.Delete" />
+                        <MudText>Delete</MudText>
+                    </MudButton>
+                    <MudMenu TransformOrigin="Origin.BottomRight" AnchorOrigin="Origin.BottomRight" EndIcon="@Icons.Material.Filled.MoreVert" Label="More">
+                        <MudMenuItem>
+                            <MudButton OnClick="OnExport">
+                                <MudText>Export</MudText>
+                            </MudButton>
+                        </MudMenuItem>
+                        <MudMenuItem>
+                            <MudFileUpload T="IBrowserFile" FilesChanged="OnImportData" Accept=".csv">
+                                <ActivatorContent>
+                                    <MudButton>
+                                        <MudText>Import</MudText>
+                                    </MudButton>
+                                </ActivatorContent>
+                            </MudFileUpload>
+                        </MudMenuItem>
+                    </MudMenu>
+                </MudStack>
+                <MudStack Row Spacing="1">
+                    <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Value="@_keywords" Placeholder="Keywords" Adornment="Adornment.End"
+                    AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Small">
+                    </MudTextField>
+                </MudStack>
+            </MudStack>
+        </MudStack>
+    </ToolBarContent>
+    <Columns>
+        <SelectColumn ShowInFooter="false"></SelectColumn>
+        <PropertyColumn Title="Title" Property="x => x.Title" />
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="TodoItemBriefDto" />
+    </PagerContent>
+</MudDataGrid>
 
 @code {
+    public string Title = "Todo Items";
+    private HashSet<TodoItemBriefDto> _selectedItems = new();
+    private TodoItemBriefDto _currentDto = new();
+    private MudDataGrid<TodoItemBriefDto> _table = default!;
+    private int _defaultPageSize = 10;
+    private string _keywords = string.Empty;
+    private bool _loading = false;
+    AggregateDefinition<TodoItemBriefDto> _priceAggregation = new AggregateDefinition<TodoItemBriefDto>
+        {
+            Type = AggregateType.Sum,
+            NumberFormat = "#",
+            DisplayFormat = "Total amount is {value}"
+        };
 
+    private async Task<GridData<TodoItemBriefDto>> ServerReload(GridState<TodoItemBriefDto> state)
+    {
+        try
+        {
+            _loading = true;
+            var query = new GetTodoItemsByPaginationQuery();
+            query.PageNumber = state.Page;
+            query.PageSize = state.PageSize;
+            query.SearchKeywords = _keywords;
+            query.OrderBy = state.SortDefinitions.FirstOrDefault()?.SortBy ?? "Id";
+            query.SortDirection = state.SortDefinitions.FirstOrDefault()?.Descending ?? true ? SortDirection.Descending.ToString() : SortDirection.Ascending.ToString();
+            var result = await TodoService.GetByPaginationAsync(query);
+            return result.Match(
+                pagedItems =>
+                {
+                    return new GridData<TodoItemBriefDto> { TotalItems = (int)pagedItems.TotalItems, Items = pagedItems.Items };
+                },
+                invalid =>
+                {
+                    Snackbar.Add(invalid.Detail ?? "Bad Request", Severity.Error);
+                    return new GridData<TodoItemBriefDto>();
+                },
+                error =>
+                {
+                    Snackbar.Add(error.Detail ?? "Failed to load Todo Item.", Severity.Error);
+                    return new GridData<TodoItemBriefDto>();
+                }
+            );   
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private Func<TodoItemBriefDto, int, string> _rowStyleFunc => (x, i) =>
+    {
+        if (!string.IsNullOrEmpty(x.Id.ToString()))
+            return "cursor:pointer";
+
+        return "";
+    };
+
+    private async Task OnSearch(string text)
+    {
+        _selectedItems = new HashSet<TodoItemBriefDto>();
+        _keywords = text;
+        await _table.ReloadServerData();
+    }
+
+    private async Task New()
+    {
+        var parameters = new DialogParameters<NewTodoItemDialog>();
+        await DialogService.ShowDialogAsync<NewTodoItemDialog>("New Todo Item", parameters, null,
+        async (state) =>
+        {
+            if (state is not null && !state.Canceled)
+            {
+                await _table.ReloadServerData();
+                _selectedItems = new();
+            }
+        });
+    }
+
+    private async Task Delete()
+    {
+        await DialogService.ShowConfirmationDialog("Delete Confirm", "Are you sure you want to delete the selected items?", async () =>
+        {
+            if (_selectedItems.Any())
+            {
+                var ids = _selectedItems.Select(x => x.Id).ToList();
+
+                foreach (var id in ids)
+                {
+                    var result = await TodoService.DeleteAsync(new DeleteTodoItemCommand(id ?? 0));
+                    result.Switch(
+                       async ok =>
+                        {
+                            await _table.ReloadServerData();
+                            StateHasChanged();
+                            Snackbar.Add("Selected item has been deleted.", Severity.Success);
+                        },
+                        error =>
+                        {
+                            Snackbar.Add(error.Detail ?? "Failed to delete selected items.", Severity.Error);
+                        },
+                        error =>
+                        {
+                            Snackbar.Add(error.Detail ?? "Failed to delete selected items.", Severity.Error);
+                        }
+                    );
+                }
+                _selectedItems = new();
+            }
+        });
+    }
+
+    private void DetailedView(TodoItemBriefDto dto)
+    {
+        Navigation.NavigateTo($"/todo-items/{dto.Id}");
+    }
+
+    private async Task OnExport()
+    {
+        await Task.CompletedTask;
+        Snackbar.Add("Not Implemented.", Severity.Info);
+    }
+
+    private async Task OnImportData(IBrowserFile file)
+    {
+        await Task.CompletedTask;
+        Snackbar.Add("Not Implemented.", Severity.Info);
+    }
 }

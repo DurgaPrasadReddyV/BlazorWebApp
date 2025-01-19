@@ -19,7 +19,7 @@ namespace WebAppStarter.Client.Services
             throw new NotImplementedException();
         }
 
-        public Task<OneOf<IEnumerable<TodoItemBriefDto>, HttpValidationProblemDetails, ProblemDetails>> GetAllAsync()
+        public Task<OneOf<PaginatedResult<TodoItemBriefDto>, HttpValidationProblemDetails, ProblemDetails>> GetByPaginationAsync(GetTodoItemsByPaginationQuery getTodoItemsByPaginationQuery)
         {
             throw new NotImplementedException();
         }

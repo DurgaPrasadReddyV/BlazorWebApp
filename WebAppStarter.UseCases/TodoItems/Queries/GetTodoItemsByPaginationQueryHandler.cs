@@ -1,10 +1,11 @@
 ﻿using AutoMapper;
 using MediatR;
+using WebAppStarter.Shared.Common;
 using WebAppStarter.Shared.UseCases.TodoItems.Queries;
 
 namespace WebAppStarter.UseCases.TodoItems.Queries;
 
-public class GetTodoItemsByPaginationQueryHandler : IRequestHandler<GetTodoItemsByPaginationQuery, List<TodoItemBriefDto>>
+public class GetTodoItemsByPaginationQueryHandler : IRequestHandler<GetTodoItemsByPaginationQuery, PaginatedResult<TodoItemBriefDto>>
 {
     private readonly IMapper _mapper;
     private readonly ITodoItemRepository _todoItemRepository;
@@ -15,9 +16,10 @@ public class GetTodoItemsByPaginationQueryHandler : IRequestHandler<GetTodoItems
         _todoItemRepository = todoItemRepository;
     }
 
-    public async Task<List<TodoItemBriefDto>> Handle(GetTodoItemsByPaginationQuery request, CancellationToken cancellationToken)
+    public async Task<PaginatedResult<TodoItemBriefDto>> Handle(GetTodoItemsByPaginationQuery request, CancellationToken cancellationToken)
     {
         var todoItems = await _todoItemRepository.RetrieveAllTodoItemsAsync();
-        return _mapper.Map<List<TodoItemBriefDto>>(todoItems);
+        var todoItemsDto = _mapper.Map<List<TodoItemBriefDto>>(todoItems);
+        return new PaginatedResult<TodoItemBriefDto>(todoItemsDto, todoItems.Count, 1, 15);
     }
 }

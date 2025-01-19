@@ -56,16 +56,16 @@ namespace WebAppStarter.Services
             return new None();
         }
 
-        public async Task<OneOf<IEnumerable<TodoItemBriefDto>, Shared.Common.HttpValidationProblemDetails, ProblemDetails>> GetAllAsync()
+        public async Task<OneOf<PaginatedResult<TodoItemBriefDto>, Shared.Common.HttpValidationProblemDetails, ProblemDetails>> GetByPaginationAsync(GetTodoItemsByPaginationQuery getTodoItemsByPaginationQuery)
         {
             var authenticationState = await _authenticationStateProvider.GetAuthenticationStateAsync();
             if (!((await _authorizationService.AuthorizeAsync(authenticationState.User, AuthorizationPolicies.CanViewTodoItem())).Succeeded))
             {
                 _navigationManager.NavigateTo("AccessDenied");
-                return new List<TodoItemBriefDto>();
+                return new PaginatedResult<TodoItemBriefDto>();
             }
 
-           return await _mediator.Send(new GetTodoItemsByPaginationQuery());
+           return await _mediator.Send(getTodoItemsByPaginationQuery);
         }
 
         public async Task<OneOf<TodoItemDto, Shared.Common.HttpValidationProblemDetails, ProblemDetails>> GetAsync(int id)

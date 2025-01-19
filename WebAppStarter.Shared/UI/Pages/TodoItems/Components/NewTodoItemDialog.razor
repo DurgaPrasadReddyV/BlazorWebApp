@@ -52,7 +52,7 @@
                 },
                 error =>
                 {
-                    Snackbar.Add(error.Detail ?? "Failed to create product.", Severity.Error);
+                    Snackbar.Add(error.Detail ?? "Failed to create todo item.", Severity.Error);
                     _saving = false;
                 }
             );

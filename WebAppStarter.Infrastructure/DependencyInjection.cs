@@ -8,6 +8,6 @@ public static class DependencyInjection
 {
     public static void AddInfrastructureServices(this IServiceCollection serviceCollection)
     {
-        serviceCollection.AddScoped<ITodoItemRepository,TodoItemRepository>();
+        serviceCollection.AddSingleton<ITodoItemRepository,TodoItemRepository>();
     }
 }

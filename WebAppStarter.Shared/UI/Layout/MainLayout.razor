@@ -1,102 +1,74 @@
-﻿@inherits LayoutComponentBase
+﻿@using WebAppStarter.Shared.UI.Services
+@inherits LayoutComponentBase
+@inject OfflineModeState OfflineModeState
 
-<MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode" />
-<MudPopoverProvider />
-<MudDialogProvider />
-<MudSnackbarProvider />
-<MudLayout>
-    <MudAppBar Elevation="1">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-        <MudText Typo="Typo.h5" Class="ml-3">Application</MudText>
-        <MudSpacer />
-        <MudIconButton Icon="@(DarkLightModeButtonIcon)" Color="Color.Inherit" OnClick="@DarkModeToggle" />
-        <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
-    </MudAppBar>
-    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
-        <NavMenu />
-    </MudDrawer>
-    <MudMainContent Class="mt-16 pa-4">
-        @Body
-    </MudMainContent>
-</MudLayout>
+<PageTitle>WebApp</PageTitle>
 
-
-<div id="blazor-error-ui">
-    An unhandled error has occurred.
-    <a href="" class="reload">Reload</a>
-    <a class="dismiss">🗙</a>
-</div>
+<MudRTLProvider RightToLeft="@LayoutService.IsRTL">
+    <MudThemeProvider @ref="@_mudThemeProvider" Theme="@LayoutService.CurrentTheme" IsDarkMode="@LayoutService.IsDarkMode" IsDarkModeChanged="@LayoutService.SetDarkMode" />
+    <MudPopoverProvider />
+    <MudSnackbarProvider />
+    <MudDialogProvider FullWidth="true" MaxWidth="MaxWidth.ExtraSmall" />
+    <MudLayout>
+        <TitleBar></TitleBar>
+        <NavigationBar></NavigationBar>
+        <MudMainContent Style="padding-top:1.5rem !important">
+            <MudContainer Gutters="false">
+                @Body
+            </MudContainer>
+        </MudMainContent>
+    </MudLayout>
+</MudRTLProvider>
 
 @code {
-    private bool _drawerOpen = true;
-    private bool _isDarkMode = true;
-    private MudTheme? _theme = null;
+    [Inject]
+    public LayoutService LayoutService { get; set; } = default!;
+    private MudThemeProvider _mudThemeProvider = default!;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
-
-        _theme = new()
+        if (LayoutService != null)
         {
-            PaletteLight = _lightPalette,
-            PaletteDark = _darkPalette,
-            LayoutProperties = new LayoutProperties()
-        };
+            LayoutService.MajorUpdateOccurred += LayoutServiceOnMajorUpdateOccured;
+        }
+
+        await OfflineModeState.InitializeAsync();
+        await ApplyUserPreferences();
+
+        if (_mudThemeProvider != null)
+        {
+            await _mudThemeProvider.WatchSystemPreference(OnSystemPreferenceChanged);
+        }
+
     }
 
-
-    private void DrawerToggle()
+    private async Task ApplyUserPreferences()
     {
-        _drawerOpen = !_drawerOpen;
+        if (_mudThemeProvider != null)
+        {
+            var defaultDarkMode = await _mudThemeProvider.GetSystemPreference();
+            if (LayoutService != null)
+            {
+                await LayoutService.ApplyUserPreferences(defaultDarkMode);
+            }
+        }
     }
 
-    private void DarkModeToggle()
+    private async Task OnSystemPreferenceChanged(bool newValue)
     {
-        _isDarkMode = !_isDarkMode;
+        if (LayoutService != null)
+        {
+            await LayoutService.OnSystemPreferenceChanged(newValue);
+        }
     }
 
-    private readonly PaletteLight _lightPalette = new()
+    public void Dispose()
     {
-        Black = "#110e2d",
-        AppbarText = "#424242",
-        AppbarBackground = "rgba(255,255,255,0.8)",
-        DrawerBackground = "#ffffff",
-        GrayLight = "#e8e8e8",
-        GrayLighter = "#f9f9f9",
-    };
+        if (LayoutService != null)
+        {
+            LayoutService.MajorUpdateOccurred -= LayoutServiceOnMajorUpdateOccured;
+        }
+    }
 
-    private readonly PaletteDark _darkPalette = new()
-    {
-        Primary = "#7e6fff",
-        Surface = "#1e1e2d",
-        Background = "#1a1a27",
-        BackgroundGray = "#151521",
-        AppbarText = "#92929f",
-        AppbarBackground = "rgba(26,26,39,0.8)",
-        DrawerBackground = "#1a1a27",
-        ActionDefault = "#74718e",
-        ActionDisabled = "#9999994d",
-        ActionDisabledBackground = "#605f6d4d",
-        TextPrimary = "#b2b0bf",
-        TextSecondary = "#92929f",
-        TextDisabled = "#ffffff33",
-        DrawerIcon = "#92929f",
-        DrawerText = "#92929f",
-        GrayLight = "#2a2833",
-        GrayLighter = "#1e1e2d",
-        Info = "#4a86ff",
-        Success = "#3dcb6c",
-        Warning = "#ffb545",
-        Error = "#ff3f5f",
-        LinesDefault = "#33323e",
-        TableLines = "#33323e",
-        Divider = "#292838",
-        OverlayLight = "#1e1e2d80",
-    };
-
-    public string DarkLightModeButtonIcon => _isDarkMode switch
-    {
-        true => Icons.Material.Rounded.AutoMode,
-        false => Icons.Material.Outlined.DarkMode,
-    };
+    private void LayoutServiceOnMajorUpdateOccured(object? sender, EventArgs e) => StateHasChanged();
 }
